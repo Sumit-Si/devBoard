@@ -14,15 +14,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model User {
-  id String @id @default(uuid())
-  name String?
-  email String @unique
-  image String?
-  password String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum TaskStatus {
+  TODO
+  INPROGRESS
+  DONE
 }
 
+enum TaskPriority {
+  EASY
+  MEDIUM
+  HIGH
+}
 
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  image     String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apiKeys ApiKeys[]
+  projects Projects[]
+}
+
+model ApiKeys {
+  id String @id @default(uuid())
+  key String @unique
+  createdBy String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model Projects {
+  id String @id @default(uuid())
+  name String
+  description String?
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model Tasks {
+  id String @id @default(uuid())
+  title String
+  projectId String
+  assignedTo String
+  assignedBy String
+  description String?
+  status TaskStatus @default(TODO)
+  priority TaskPriority @default(EASY)
+  attachments String[]
+  createdAt DateTime @default(now())
+  endAt DateTime
+  updatedAt DateTime @updatedAt
+}

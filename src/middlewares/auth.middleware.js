@@ -1,6 +1,7 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+import { db } from "../libs/db.js";
 
-const isLoggedIn = async (req, res) => {
+const isLoggedIn = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
 
@@ -16,10 +17,38 @@ const isLoggedIn = async (req, res) => {
 
     next();
   } catch (error) {
-    console.log(error,"auth middleware error");
+    console.log(error, "auth middleware error");
     next(error);
   }
 };
 
+const apiKeyAuth = async (req, res, next) => {
+  const key = req.header("Authorization").replace("Bearer ", "");
+  console.log(key, "key");
 
-export {isLoggedIn}
+  if (!key) {
+    return res.status(400).json({
+      message: "Invalid key, generate a new one",
+    });
+  }
+
+  try {
+    const isKeyExist = await db.ApiKeys.findUnique({
+      where: {
+        key,
+      },
+    });
+
+    if (!isKeyExist) {
+      return res.status(400).json({
+        message: "Key not exist",
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { isLoggedIn, apiKeyAuth };

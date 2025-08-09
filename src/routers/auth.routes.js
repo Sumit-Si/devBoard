@@ -1,5 +1,5 @@
 import express from "express";
-import { login, profile, register } from "../controllers/auth.controller.js";
+import { generateApiKey, login, profile, register } from "../controllers/auth.controller.js";
 import { userLoginValidator, userRegisterValidator } from "../validator/index.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { isLoggedIn } from "../middlewares/auth.middleware.js";
@@ -17,9 +17,14 @@ router
     .route("/login")
     .post(userLoginValidator(),validate,login)
 
+// apikey route
+router
+    .route("/api-key")
+    .post(isLoggedIn,generateApiKey)
+
 // profile route
 router
     .route("/me")
-    .post(isLoggedIn,profile)
+    .get(isLoggedIn,profile)
 
 export default router;
