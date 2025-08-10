@@ -10,10 +10,12 @@ app.use(cookieParser());
 
 import authRoutes from "./routers/auth.routes.js";
 import projectRoutes from "./routers/project.routes.js";
+import taskRoutes from "./routers/task.routes.js";
 
 // custom routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/p", projectRoutes);
+app.use("/api/v1/t", taskRoutes);
 
 //routes
 app.get("/health-check", (req, res) => {
