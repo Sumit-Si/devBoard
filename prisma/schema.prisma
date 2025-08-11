@@ -35,10 +35,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  apiKeys ApiKeys[]
-  projects Projects[]
-  assignedUser Tasks[] @relation("TaskAssignedTo")
-  assignedByUser Tasks[] @relation("TaskAssignedBy")
+// Relations
+  apiKeys        ApiKeys[]
+  projects       Projects[]
+  assignedUser   Tasks[]  @relation("TaskAssignedTo")
+  assignedByUser Tasks[]  @relation("TaskAssignedBy")
 }
 
 model ApiKeys {
@@ -59,9 +60,9 @@ model Projects {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  tasks Tasks[]
   user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
-  tasks Tasks[]
 }
 
 model Tasks {
@@ -78,7 +79,8 @@ model Tasks {
   endAt DateTime? @default(now())
   updatedAt DateTime @updatedAt
 
-  project Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignedUser User @relation("TaskAssignedTo",fields: [assignedTo], references: [id], onDelete: Cascade)
-  assignedByUser User @relation("TaskAssignedBy",fields: [assignedBy], references: [id], onDelete: Cascade)
+   // Relations
+  project         Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedUser    User     @relation("TaskAssignedTo", fields: [assignedTo], references: [id], onDelete: Cascade)
+  assignedByUser  User     @relation("TaskAssignedBy", fields: [assignedBy], references: [id], onDelete: Cascade)
 }
