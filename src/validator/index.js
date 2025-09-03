@@ -20,8 +20,8 @@ const userRegisterValidator = () => {
       .trim()
       .notEmpty()
       .withMessage("Password is required")
-      .isLength({ min: 6, max: 15 })
-      .withMessage("Password must be at least 6 and max to 15 characters"),
+      .isLength({ min: 8, max: 20 })
+      .withMessage("Password must be at least 8 and max to 20 characters"),
 
     body("image").optional(),
   ];
@@ -45,4 +45,85 @@ const userLoginValidator = () => {
   ];
 };
 
-export { userRegisterValidator,userLoginValidator };
+// project validation
+const createProjectValidator = () => {
+  return [
+    body("name")
+      .trim()
+      .notEmpty()
+      .withMessage("Project Name is required")
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Project Name must be 3-50 characters"),
+
+    body("description")
+      .optional()
+      .trim()
+      .isLength({ min: 20, max: 1200 })
+      .withMessage("Description must be 20-1200 characters"),
+  ];
+};
+
+const updateProjectValidator = () => {
+  return [
+    body("name")
+      .trim()
+      .notEmpty()
+      .withMessage("Project Name is required")
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Project Name must be 3-50 characters"),
+
+    body("description")
+      .optional()
+      .trim()
+      .isLength({ min: 20, max: 1200 })
+      .withMessage("Description must be 20-1200 characters"),
+  ];
+};
+
+// task validation
+const createTaskValidator = () => {
+  return [
+    body("title")
+      .trim()
+      .notEmpty()
+      .withMessage("Title is required")
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Title must be 3-50 characters"),
+
+    body("description")
+      .trim()
+      .optional()
+      .isLength({ min: 10, max: 500 })
+      .withMessage("must be 10-500 characters"),
+
+    body("assignedTo").trim().notEmpty().withMessage("AssignedTo is required"),
+
+    body("assignedBy").trim().notEmpty().withMessage("AssignedBy is required"),
+  ];
+};
+
+const updateTaskValidator = () => {
+  return [
+    body("title")
+      .trim()
+      .notEmpty()
+      .withMessage("Title is required")
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Title must be 3-50 characters"),
+
+    body("description")
+      .trim()
+      .optional()
+      .isLength({ min: 10, max: 500 })
+      .withMessage("must be 10-500 characters"),
+  ];
+};
+
+export {
+  userRegisterValidator,
+  userLoginValidator,
+  createProjectValidator,
+  updateProjectValidator,
+  createTaskValidator,
+  updateTaskValidator
+};

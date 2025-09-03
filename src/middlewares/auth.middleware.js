@@ -3,7 +3,7 @@ import { db } from "../libs/db.js";
 
 const isLoggedIn = async (req, res, next) => {
   try {
-    const token = req.cookies?.token;
+    const token = req.cookies?.accessToken;
 
     if (!token) {
       return res.status(400).json({
@@ -11,7 +11,7 @@ const isLoggedIn = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
     req.user = decoded;
 
@@ -23,7 +23,7 @@ const isLoggedIn = async (req, res, next) => {
 };
 
 const apiKeyAuth = async (req, res, next) => {
-  const key = req.header("Authorization").replace("Bearer ", "");
+  const key = req.header("Authorization")?.replace("Bearer ", "");
   console.log(key, "key");
 
   if (!key) {
@@ -33,7 +33,7 @@ const apiKeyAuth = async (req, res, next) => {
   }
 
   try {
-    const isKeyExist = await db.ApiKeys.findUnique({
+    const isKeyExist = await db.ApiKey.findUnique({
       where: {
         key,
       },

@@ -2,9 +2,9 @@ import app from "./app.js";
 import dotenv from "dotenv";
 import { db } from "./libs/db.js";
 
-// dotenv.config({
-//     path: "./env",
-// })
+dotenv.config({
+    path: "./env",
+})
 
 const PORT = process.env.PORT || 8080;
 

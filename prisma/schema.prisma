@@ -14,6 +14,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ApiKeyStatus {
+  ACTIVE
+  INACTIVE
+}
+
 enum TaskStatus {
   TODO
   INPROGRESS
@@ -27,60 +32,75 @@ enum TaskPriority {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  image     String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  image        String?
+  password     String
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-// Relations
-  apiKeys        ApiKeys[]
-  projects       Projects[]
-  assignedUser   Tasks[]  @relation("TaskAssignedTo")
-  assignedByUser Tasks[]  @relation("TaskAssignedBy")
+  // Relations
+  apiKeys        ApiKey[]
+  projects       Project[]
+  assignedUser   Task[]    @relation("TaskAssignedTo")
+  assignedByUser Task[]    @relation("TaskAssignedBy")
+
+  @@map("users")
 }
 
-model ApiKeys {
-  id String @id @default(uuid())
-  key String @unique
-  createdBy String 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-}
-
-model Projects {
-  id String @id @default(uuid())
-  name String
-  description String?
+model ApiKey {
+  id        String       @id @default(uuid())
+  key       String       @unique
   createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    ApiKeyStatus @default(ACTIVE)
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  tasks Tasks[]
   user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
+  @@map("api_keys")
 }
 
-model Tasks {
-  id String @id @default(uuid())
-  title String
-  projectId String
-  assignedTo String
-  assignedBy String
+model Project {
+  id          String    @id @default(uuid())
+  name        String
   description String?
-  status TaskStatus @default(TODO)
-  priority TaskPriority @default(EASY)
-  attachments String[]
-  createdAt DateTime @default(now())
-  endAt DateTime? @default(now())
-  updatedAt DateTime @updatedAt
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
-   // Relations
-  project         Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignedUser    User     @relation("TaskAssignedTo", fields: [assignedTo], references: [id], onDelete: Cascade)
-  assignedByUser  User     @relation("TaskAssignedBy", fields: [assignedBy], references: [id], onDelete: Cascade)
+  tasks Task[]
+  user  User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  title       String
+  projectId   String
+  assignedTo  String
+  assignedBy  String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(EASY)
+  attachments String[]
+
+  dueAt       DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  project        Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedUser   User     @relation("TaskAssignedTo", fields: [assignedTo], references: [id], onDelete: Cascade)
+  assignedByUser User     @relation("TaskAssignedBy", fields: [assignedBy], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
 }

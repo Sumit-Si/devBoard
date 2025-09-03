@@ -1,12 +1,14 @@
 import { db } from "../libs/db.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createTask = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { projectId } = req.params;
-    const { title, description, assignedTo, assignedBy } = req.body;
+    const { title, description, assignedTo, assignedBy, status, priority } =
+      req.body;
 
-    const project = await db.projects.findUnique({
+    const project = await db.project.findFirst({
       where: {
         id: projectId,
         createdBy: userId,
@@ -19,27 +21,43 @@ const createTask = async (req, res) => {
       });
     }
 
-    const task = await db.tasks.create({
-      data: {
-        title,
-        description,
-        assignedTo,
-        projectId,
-        assignedBy,
-      },
-    });
+    let uploadResult;
+    const localFilePath = req.file?.path;
 
-    if (!task) {
+    if (req.file && !localFilePath) {
       return res.status(400).json({
-        message: "Problem while creating task",
+        message: "File is missing",
       });
     }
 
-    res.status(201).json({
-      success: true,
-      message: "Task created successfully",
-      task,
-    });
+    try {
+      if (localFilePath) uploadResult = await uploadOnCloudinary(localFilePath);
+
+      const task = await db.task.create({
+        data: {
+          title,
+          description,
+          projectId,
+          assignedTo,
+          assignedBy,
+          status,
+          priority,
+          attachments: uploadResult ? uploadResult?.url : null,
+        },
+      });
+
+      if (!task) {
+        return res.status(400).json({
+          message: "Problem while creating task",
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        message: "Task created successfully",
+        task,
+      });
+    } catch (error) {}
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -54,7 +72,16 @@ const getTasks = async (req, res) => {
     const userId = req.user?.id;
     const { projectId } = req.params;
 
-    const existingProject = await db.projects.findUnique({
+    let { limit = 10, page = 1 } = req.query;
+
+    if (page <= 0) page = 1;
+    if (limit <= 0 || limit >= 50) {
+      limit = 10;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const existingProject = await db.project.findFirst({
       where: {
         id: projectId,
         createdBy: userId,
@@ -67,10 +94,12 @@ const getTasks = async (req, res) => {
       });
     }
 
-    const tasks = await db.tasks.findMany({
+    const tasks = await db.task.findMany({
       where: {
         projectId,
       },
+      take: parseInt(limit),
+      skip: parseInt(skip),
       include: {
         project: {
           select: {
@@ -96,22 +125,30 @@ const getTasks = async (req, res) => {
       },
     });
 
-    if (!tasks) {
+    if (!tasks || tasks?.length === 0) {
       return res.status(404).json({
         message: "Tasks not found",
       });
     }
 
+    const totalTasks = await db.task.count({});
+    const totalPages = Math.ceil(totalTasks / limit);
+
     res.status(200).json({
       success: true,
       message: "Tasks fetched successfully",
       tasks,
+      metadata: {
+        totalPages,
+        currentPage: page,
+        currentLimit: limit,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message,
+      error: error?.message,
     });
   }
 };
@@ -121,7 +158,7 @@ const updateTask = async (req, res) => {
     const { id } = req.params;
     const { title, description, status } = req.body;
 
-    const existingTask = await db.tasks.findUnique({
+    const existingTask = await db.task.findUnique({
       where: {
         id,
       },
@@ -133,7 +170,7 @@ const updateTask = async (req, res) => {
       });
     }
 
-    const task = await db.tasks.update({
+    const task = await db.task.update({
       where: {
         id,
       },
@@ -168,7 +205,7 @@ const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const existingTask = await db.tasks.findUnique({
+    const existingTask = await db.task.findUnique({
       where: {
         id,
       },
@@ -180,23 +217,23 @@ const deleteTask = async (req, res) => {
       });
     }
 
-    const task = await db.tasks.delete({
+    const task = await db.task.delete({
       where: {
         id,
-      }
-    })
+      },
+    });
 
-    if(!task) {
+    if (!task) {
       return res.status(400).json({
         message: "Problem while deleting task",
-      })
+      });
     }
 
     res.status(200).json({
       success: true,
       message: "Task deleted successfully",
       task,
-    })
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
