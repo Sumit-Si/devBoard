@@ -99,6 +99,18 @@ const createTaskValidator = () => {
     body("assignedTo").trim().notEmpty().withMessage("AssignedTo is required"),
 
     body("assignedBy").trim().notEmpty().withMessage("AssignedBy is required"),
+
+    body("status")
+      .trim()
+      .optional()
+      .isIn(["DONE", "INPROGRESS", "TODO"])
+      .withMessage("Status should either be TODO,INPROGRESS or DONE"),
+
+    body("priority")
+      .trim()
+      .optional()
+      .isIn(["EASY", "MEDIUM", "HARD"])
+      .withMessage("Priority should either be EASY,MEDIUM or HARD"),
   ];
 };
 
@@ -116,6 +128,42 @@ const updateTaskValidator = () => {
       .optional()
       .isLength({ min: 10, max: 500 })
       .withMessage("must be 10-500 characters"),
+
+    body("status")
+      .trim()
+      .optional()
+      .isIn(["DONE", "INPROGRESS", "TODO"])
+      .withMessage("Status should either be TODO,INPROGRESS or DONE"),
+
+    body("priority")
+      .trim()
+      .optional()
+      .isIn(["EASY", "MEDIUM", "HARD"])
+      .withMessage("Priority should either be EASY,MEDIUM or HARD"),
+  ];
+};
+
+// collaborator validation
+const createCollaboratorValidator = () => {
+  return [
+    body("userId").trim().notEmpty().withMessage("userId is required"),
+    body("role")
+      .trim()
+      .notEmpty()
+      .withMessage("role is required")
+      .isIn(["VIEWER", "EDITOR", "OWNER"])
+      .withMessage("role must be VIEWER, EDITOR, or OWNER"),
+  ];
+};
+
+const updateCollaboratorValidator = () => {
+  return [
+    body("role")
+      .trim()
+      .notEmpty()
+      .withMessage("role is required")
+      .isIn(["VIEWER", "EDITOR", "OWNER"])
+      .withMessage("role must be VIEWER, EDITOR, or OWNER"),
   ];
 };
 
@@ -125,5 +173,7 @@ export {
   createProjectValidator,
   updateProjectValidator,
   createTaskValidator,
-  updateTaskValidator
+  updateTaskValidator,
+  createCollaboratorValidator,
+  updateCollaboratorValidator,
 };

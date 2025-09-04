@@ -7,6 +7,7 @@ A robust REST API for managing projects and tasks with user authentication, API 
 - **User Authentication & Authorization** - JWT-based authentication with refresh tokens
 - **Project Management** - Create, read, update, and delete projects
 - **Task Management** - Comprehensive task handling with status tracking and priority levels
+- **Collaborators & Roles** - Add project collaborators with role-based permissions (OWNER/EDITOR/VIEWER)
 - **API Key Management** - Secure API access with key-based authentication
 - **File Uploads** - Support for task attachments using Cloudinary
 - **Rate Limiting** - Built-in protection against abuse
@@ -40,18 +41,21 @@ devBoard/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd devBoard
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Environment Setup**
    Create a `.env` file in the root directory:
+
    ```env
    PORT=8080
    DATABASE_URL="postgresql://<username>:<password>@localhost:<PORT>/<DB_NAME>"
@@ -63,10 +67,11 @@ devBoard/
    ```
 
 4. **Database Setup**
+
    ```bash
    # Generate Prisma client
    npx prisma generate
-   
+
    # Run database migrations
    npx prisma migrate dev
    ```
@@ -81,6 +86,7 @@ The server will start at `http://localhost:8080`
 ## 📚 API Documentation
 
 ### Base URL
+
 ```
 http://localhost:8080/api/v1
 ```
@@ -88,6 +94,7 @@ http://localhost:8080/api/v1
 ### Authentication
 
 #### Register User
+
 ```http
 POST /auth/register
 Content-Type: multipart/form-data
@@ -101,6 +108,7 @@ Content-Type: multipart/form-data
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -112,12 +120,13 @@ Content-Type: multipart/form-data
       "email": "john@example.com",
       "image": "cloudinary-url",
       "createdAt": "2024-01-01T00:00:00.000Z"
-    },
+    }
   }
 }
 ```
 
 #### Login User
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -129,6 +138,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -146,12 +156,14 @@ Content-Type: application/json
 ```
 
 #### Generate API Key
+
 ```http
 POST /auth/api-key
 Authorization: Bearer <access-token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -165,6 +177,7 @@ Authorization: Bearer <access-token>
 ### Projects
 
 #### Create Project
+
 ```http
 POST /projects
 Authorization: Bearer <access-token>
@@ -178,6 +191,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -196,6 +210,7 @@ Content-Type: application/json
 ```
 
 #### Get All Projects
+
 ```http
 GET /projects
 Authorization: Bearer <access-token>
@@ -203,6 +218,7 @@ X-API-Key: <api-key>
 ```
 
 #### Get Project by ID
+
 ```http
 GET /projects/:id
 Authorization: Bearer <access-token>
@@ -210,6 +226,7 @@ X-API-Key: <api-key>
 ```
 
 #### Update Project
+
 ```http
 PUT /projects/:id
 Authorization: Bearer <access-token>
@@ -223,8 +240,54 @@ Content-Type: application/json
 ```
 
 #### Delete Project
+
 ```http
 DELETE /projects/:id
+Authorization: Bearer <access-token>
+X-API-Key: <api-key>
+```
+
+### Collaborators
+
+#### List Collaborators for a Project
+
+```http
+GET /projects/:projectId/collaborators
+Authorization: Bearer <access-token>
+X-API-Key: <api-key>
+```
+
+#### Add Collaborator to a Project (OWNER)
+
+```http
+POST /projects/:projectId/collaborators
+Authorization: Bearer <access-token>
+X-API-Key: <api-key>
+Content-Type: application/json
+
+{
+  "userId": "user-uuid",
+  "role": "VIEWER" // VIEWER | EDITOR | OWNER
+}
+```
+
+#### Update Collaborator Role (OWNER)
+
+```http
+PUT /projects/:projectId/collaborators/:collaboratorId
+Authorization: Bearer <access-token>
+X-API-Key: <api-key>
+Content-Type: application/json
+
+{
+  "role": "EDITOR" // VIEWER | EDITOR | OWNER
+}
+```
+
+#### Remove Collaborator (OWNER)
+
+```http
+DELETE /projects/:projectId/collaborators/:collaboratorId
 Authorization: Bearer <access-token>
 X-API-Key: <api-key>
 ```
@@ -232,6 +295,7 @@ X-API-Key: <api-key>
 ### Tasks
 
 #### Create Task
+
 ```http
 POST /projects/:projectId/tasks
 Authorization: Bearer <access-token>
@@ -249,6 +313,7 @@ Content-Type: multipart/form-data
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -272,6 +337,7 @@ Content-Type: multipart/form-data
 ```
 
 #### Get Tasks for Project
+
 ```http
 GET /projects/:projectId/tasks
 Authorization: Bearer <access-token>
@@ -279,6 +345,7 @@ X-API-Key: <api-key>
 ```
 
 #### Update Task
+
 ```http
 PUT /tasks/:id
 Authorization: Bearer <access-token>
@@ -294,6 +361,7 @@ Content-Type: application/json
 ```
 
 #### Delete Task
+
 ```http
 DELETE /tasks/:id
 Authorization: Bearer <access-token>
@@ -303,11 +371,13 @@ X-API-Key: <api-key>
 ## 🔐 Authentication & Authorization
 
 ### JWT Tokens
+
 - **Access Token**: Short-lived token for API requests
 - **Refresh Token**: Long-lived token for getting new access tokens
 - **API Key**: Additional security layer for sensitive operations
 
 ### Required Headers
+
 ```http
 Authorization: Bearer <access-token>
 X-API-Key: <api-key>
@@ -316,6 +386,7 @@ X-API-Key: <api-key>
 ## 📊 Data Models
 
 ### User
+
 - `id`: Unique identifier (UUID)
 - `name`: User's full name
 - `email`: Unique email address
@@ -325,6 +396,7 @@ X-API-Key: <api-key>
 - `createdAt`, `updatedAt`: Timestamps
 
 ### Project
+
 - `id`: Unique identifier (UUID)
 - `name`: Project name
 - `description`: Project description (optional)
@@ -332,6 +404,7 @@ X-API-Key: <api-key>
 - `createdAt`, `updatedAt`, `deletedAt`: Timestamps
 
 ### Task
+
 - `id`: Unique identifier (UUID)
 - `title`: Task title
 - `description`: Task description (optional)
@@ -346,6 +419,7 @@ X-API-Key: <api-key>
 - `createdAt`, `updatedAt`, `deletedAt`: Timestamps
 
 ### ApiKey
+
 - `id`: Unique identifier (UUID)
 - `key`: Generated API key string
 - `createdBy`: User ID who created the key
@@ -353,14 +427,25 @@ X-API-Key: <api-key>
 - `expiresAt`: Key expiration date (optional)
 - `createdAt`, `updatedAt`: Timestamps
 
+
+### Collaborator
+
+- `id`: Unique identifier (UUID)
+- `userId`: Collaborator user's ID
+- `projectId`: Associated project ID
+- `role`: VIEWER, EDITOR, OWNER
+- `createdAt`, `updatedAt`, `deletedAt`: Timestamps
+
 ## 🛠️ Development
 
 ### Available Scripts
+
 ```bash
 npm run dev          # Start development server with nodemon
 ```
 
 ### Database Migrations
+
 ```bash
 npx prisma migrate dev    # Create and apply new migration
 npx prisma generate      # Generate Prisma client
@@ -368,6 +453,7 @@ npx prisma studio        # Open Prisma Studio for database management
 ```
 
 ### Environment Variables
+
 - `PORT`: Server port (default: 8080)
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret for JWT access tokens
@@ -398,6 +484,7 @@ The API returns consistent error responses:
 ```
 
 Common HTTP status codes:
+
 - `200`: Success
 - `201`: Created
 - `400`: Bad Request (validation errors)
@@ -406,11 +493,9 @@ Common HTTP status codes:
 - `404`: Not Found
 - `500`: Internal Server Error
 
-
 ## 📄 License
 
 This project is licensed under the ISC License.
-
 
 ---
 

@@ -2,7 +2,7 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
 import { limiter } from "./config/rateLimiter.js";
-import fs from "fs"
+import fs from "fs";
 import path from "path";
 
 const app = express();
@@ -21,21 +21,21 @@ app.use(
   }),
 );
 
-app.use(express.json({limit: "16kb"}));
+app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use(limiter);
 
-
 // custom routes
 import authRoutes from "./routers/auth.routes.js";
 import projectRoutes from "./routers/project.routes.js";
 import taskRoutes from "./routers/task.routes.js";
+import collaboratorRoutes from "./routers/collaborator.routes.js";
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/projects", projectRoutes);
 app.use("/api/v1/t", taskRoutes);
-
+app.use("/api/v1/projects/:projectId/collaborators", collaboratorRoutes);
 
 export default app;

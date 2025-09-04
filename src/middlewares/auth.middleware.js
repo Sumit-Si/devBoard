@@ -51,4 +51,37 @@ const apiKeyAuth = async (req, res, next) => {
   }
 };
 
-export { isLoggedIn, apiKeyAuth };
+const collaboratorCheck =
+  (roles = []) =>
+  async (req, res, next) => {
+    try {
+      const userId = req.user?.id;
+      const { projectId } = req.params;
+
+      const isCollaborator = await db.collaborator.findFirst({
+        where: {
+          userId,
+          projectId,
+          deletedAt: null,
+        },
+      });
+
+      if (!isCollaborator) {
+        return res.status(404).json({
+          message: "Collaborator data not exists",
+        });
+      }
+
+      if (!roles?.includes(isCollaborator?.role)) {
+        return res.status(403).json({
+          message: "You are not authorized to create task in this project",
+        });
+      }
+      return next();
+    } catch (error) {
+      console.log(error, "collaborator check error");
+      next(error);
+    }
+  };
+
+export { isLoggedIn, apiKeyAuth, collaboratorCheck };

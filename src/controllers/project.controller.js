@@ -47,10 +47,37 @@ const createProject = async (req, res) => {
       },
     });
 
+    const projectCollab = await db.collaborator.create({
+      data: {
+        userId: userId,
+        projectId: project?.id,
+        role: "OWNER",
+      }
+    })
+
+    const createdCollabProject = await db.collaborator.findUnique({
+      where: {
+        id: projectCollab?.id,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          }
+        },
+        project: {
+          select: {
+            name: true,
+          }
+        },
+      }
+    })
+
     res.status(201).json({
       success: true,
       message: "Project created successfully",
       project: populatedProjectInfo,
+      collaborator: createdCollabProject,
     });
   } catch (error) {
     res.status(500).json({

@@ -1,5 +1,8 @@
 import { db } from "../libs/db.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 
 const createTask = async (req, res) => {
   try {
@@ -8,10 +11,11 @@ const createTask = async (req, res) => {
     const { title, description, assignedTo, assignedBy, status, priority } =
       req.body;
 
+
     const project = await db.project.findFirst({
       where: {
         id: projectId,
-        createdBy: userId,
+        deletedAt: null,
       },
     });
 
@@ -21,18 +25,23 @@ const createTask = async (req, res) => {
       });
     }
 
-    let uploadResult;
-    const localFilePath = req.file?.path;
+    let uploadResults = [];
 
-    if (req.file && !localFilePath) {
+    try {
+      uploadResults = await Promise.all(
+        req.files?.map((file) => uploadOnCloudinary(file?.path)),
+      );
+    } catch (error) {
       return res.status(400).json({
-        message: "File is missing",
+        message: "Failed to upload files",
       });
     }
 
-    try {
-      if (localFilePath) uploadResult = await uploadOnCloudinary(localFilePath);
+    const attachments = uploadResults
+      .map((file) => file?.secure_url)
+      .filter((url) => !!url);
 
+    try {
       const task = await db.task.create({
         data: {
           title,
@@ -42,7 +51,7 @@ const createTask = async (req, res) => {
           assignedBy,
           status,
           priority,
-          attachments: uploadResult ? uploadResult?.url : null,
+          attachments,
         },
       });
 
@@ -57,7 +66,18 @@ const createTask = async (req, res) => {
         message: "Task created successfully",
         task,
       });
-    } catch (error) {}
+    } catch (error) {
+      console.log("Failed to create user");
+
+      await Promise.all(
+        uploadResults.map((file) => deleteFromCloudinary(file?.public_id)),
+      );
+      res.status(500).json({
+        success: false,
+        message: "Problem while creating task",
+        error: error.message,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -85,6 +105,7 @@ const getTasks = async (req, res) => {
       where: {
         id: projectId,
         createdBy: userId,
+        deletedAt: null,
       },
     });
 
@@ -97,6 +118,7 @@ const getTasks = async (req, res) => {
     const tasks = await db.task.findMany({
       where: {
         projectId,
+        deletedAt: null,
       },
       take: parseInt(limit),
       skip: parseInt(skip),
@@ -161,6 +183,7 @@ const updateTask = async (req, res) => {
     const existingTask = await db.task.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
     });
 
@@ -172,7 +195,7 @@ const updateTask = async (req, res) => {
 
     const task = await db.task.update({
       where: {
-        id,
+        id: existingTask?.id,
       },
       data: {
         title,
@@ -208,6 +231,7 @@ const deleteTask = async (req, res) => {
     const existingTask = await db.task.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
     });
 
@@ -217,9 +241,12 @@ const deleteTask = async (req, res) => {
       });
     }
 
-    const task = await db.task.delete({
+    const task = await db.task.update({
       where: {
         id,
+      },
+      data: {
+        deletedAt: new Date(),
       },
     });
 
