@@ -42,8 +42,6 @@ const register = async (req, res) => {
           image: uploadResult ? uploadResult?.url : null,
         },
       });
-      // #TODO: ...(image && {image}) inside the data
-      console.log(user, "newUser");
 
       res.status(200).json({
         success: true,

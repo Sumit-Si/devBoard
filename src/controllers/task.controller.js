@@ -8,9 +8,8 @@ const createTask = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { projectId } = req.params;
-    const { title, description, assignedTo, assignedBy, status, priority } =
+    const { title, description, assignedTo, assignedBy, status, priority,dueAt } =
       req.body;
-
 
     const project = await db.project.findFirst({
       where: {
@@ -25,6 +24,37 @@ const createTask = async (req, res) => {
       });
     }
 
+    const assignedToCollab = await db.collaborator.findFirst({
+      where: {
+        projectId,
+        userId: assignedTo,
+        deletedAt: null,
+      },
+    });
+
+    if (!assignedToCollab) {
+      return res.status(400).json({
+        message: "Assigned user must be a collaborator",
+      });
+    }
+
+    const assignedByCollab = await db.collaborator.findFirst({
+      where: {
+        projectId,
+        userId: assignedBy,
+        role: {
+          in: ["OWNER", "EDITOR"],
+        },
+        deletedAt: null,
+      },
+    });
+
+    if (!assignedByCollab || assignedBy !== userId) {
+      return res.status(400).json({
+        message: "Unauthorized - cannot assign tasks",
+      });
+    }
+
     let uploadResults = [];
 
     try {
@@ -33,7 +63,7 @@ const createTask = async (req, res) => {
       );
     } catch (error) {
       return res.status(400).json({
-        message: "Failed to upload files",
+        message: `Failed to upload files ${error?.message}`,
       });
     }
 
@@ -52,6 +82,7 @@ const createTask = async (req, res) => {
           status,
           priority,
           attachments,
+          dueAt,
         },
       });
 
@@ -67,7 +98,6 @@ const createTask = async (req, res) => {
         task,
       });
     } catch (error) {
-      console.log("Failed to create user");
 
       await Promise.all(
         uploadResults.map((file) => deleteFromCloudinary(file?.public_id)),
@@ -104,7 +134,6 @@ const getTasks = async (req, res) => {
     const existingProject = await db.project.findFirst({
       where: {
         id: projectId,
-        createdBy: userId,
         deletedAt: null,
       },
     });
@@ -178,9 +207,10 @@ const getTasks = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, status } = req.body;
+    const { title, description, status, priority, dueAt, completedAt } =
+      req.body;
 
-    const existingTask = await db.task.findUnique({
+    const existingTask = await db.task.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -201,11 +231,14 @@ const updateTask = async (req, res) => {
         title,
         description,
         status,
+        priority,
+        dueAt,
+        completedAt,
       },
     });
 
     if (!task) {
-      return res.status(400).json({
+      return res.status(500).json({
         message: "Problem while updating task",
       });
     }
@@ -228,7 +261,7 @@ const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const existingTask = await db.task.findUnique({
+    const existingTask = await db.task.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -251,7 +284,7 @@ const deleteTask = async (req, res) => {
     });
 
     if (!task) {
-      return res.status(400).json({
+      return res.status(500).json({
         message: "Problem while deleting task",
       });
     }

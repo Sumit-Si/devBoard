@@ -1,4 +1,4 @@
-# 🚀 devBoard - Task Management System
+# 🚀 DevBoard - Task Management System
 
 A robust REST API for managing projects and tasks with user authentication, API key management, and file uploads. Built with Node.js, Express, Prisma, and PostgreSQL.
 
@@ -426,7 +426,6 @@ X-API-Key: <api-key>
 - `status`: ACTIVE or INACTIVE
 - `expiresAt`: Key expiration date (optional)
 - `createdAt`, `updatedAt`: Timestamps
-
 
 ### Collaborator
 

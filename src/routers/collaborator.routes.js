@@ -6,9 +6,9 @@ import {
 } from "../middlewares/auth.middleware.js";
 import {
   addCollaborator,
-  listCollaborators,
+  getCollaborators,
   updateCollaborator,
-  removeCollaborator,
+  deleteCollaborator,
 } from "../controllers/collaborator.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import {
@@ -17,6 +17,7 @@ import {
 } from "../validator/index.js";
 
 const router = express.Router({ mergeParams: true });
+console.log(router,"router");
 
 router
   .route("/")
@@ -24,7 +25,7 @@ router
     isLoggedIn,
     apiKeyAuth,
     collaboratorCheck(["OWNER", "EDITOR", "VIEWER"]),
-    listCollaborators,
+    getCollaborators,
   )
   .post(
     isLoggedIn,
@@ -49,7 +50,7 @@ router
     isLoggedIn,
     apiKeyAuth,
     collaboratorCheck(["OWNER"]),
-    removeCollaborator,
+    deleteCollaborator,
   );
 
 export default router;

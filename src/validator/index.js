@@ -109,8 +109,14 @@ const createTaskValidator = () => {
     body("priority")
       .trim()
       .optional()
-      .isIn(["EASY", "MEDIUM", "HARD"])
-      .withMessage("Priority should either be EASY,MEDIUM or HARD"),
+      .isIn(["EASY", "MEDIUM", "HIGH"])
+      .withMessage("Priority should either be EASY,MEDIUM or HIGH"),
+
+    body("dueAt")
+      .trim()
+      .optional()
+      .isISO8601()
+      .withMessage("Due date must be a valid ISO date"),
   ];
 };
 
@@ -138,21 +144,33 @@ const updateTaskValidator = () => {
     body("priority")
       .trim()
       .optional()
-      .isIn(["EASY", "MEDIUM", "HARD"])
-      .withMessage("Priority should either be EASY,MEDIUM or HARD"),
+      .isIn(["EASY", "MEDIUM", "HIGH"])
+      .withMessage("Priority should either be EASY,MEDIUM or HIGH"),
+
+    body("dueAt")
+      .trim()
+      .optional()
+      .isISO8601()
+      .withMessage("Due date must be a valid ISO date"),
+
+    body("completedAt")
+      .trim()
+      .optional()
+      .isISO8601()
+      .withMessage("CompletedAt must be a valid ISO date"),
   ];
 };
 
 // collaborator validation
 const createCollaboratorValidator = () => {
   return [
-    body("userId").trim().notEmpty().withMessage("userId is required"),
+    body("userId").trim().notEmpty().withMessage("UserId is required"),
     body("role")
       .trim()
       .notEmpty()
-      .withMessage("role is required")
+      .withMessage("Role is required")
       .isIn(["VIEWER", "EDITOR", "OWNER"])
-      .withMessage("role must be VIEWER, EDITOR, or OWNER"),
+      .withMessage("Role must be VIEWER, EDITOR, or OWNER"),
   ];
 };
 
@@ -161,9 +179,9 @@ const updateCollaboratorValidator = () => {
     body("role")
       .trim()
       .notEmpty()
-      .withMessage("role is required")
+      .withMessage("Role is required")
       .isIn(["VIEWER", "EDITOR", "OWNER"])
-      .withMessage("role must be VIEWER, EDITOR, or OWNER"),
+      .withMessage("Role must be VIEWER, EDITOR, or OWNER"),
   ];
 };
 

@@ -17,14 +17,12 @@ const isLoggedIn = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error, "auth middleware error");
     next(error);
   }
 };
 
 const apiKeyAuth = async (req, res, next) => {
   const key = req.header("Authorization")?.replace("Bearer ", "");
-  console.log(key, "key");
 
   if (!key) {
     return res.status(400).json({
@@ -79,7 +77,6 @@ const collaboratorCheck =
       }
       return next();
     } catch (error) {
-      console.log(error, "collaborator check error");
       next(error);
     }
   };
